@@ -1,15 +1,22 @@
 package rish.crearo.navdrawerbase;
 
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
+
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.accountswitcher.AccountHeader;
+import com.mikepenz.materialdrawer.accountswitcher.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -19,12 +26,6 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.main_tool_bar)
     Toolbar toolbar;
 
-    @Bind(R.id.main_drawer_layout)
-    DrawerLayout drawerLayout;
-
-    @Bind(R.id.main_nav_view)
-    NavigationView navigationView;
-
     @Bind(R.id.main_frame_layout)
     FrameLayout frameLayout;
 
@@ -32,45 +33,66 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         ButterKnife.bind(this);
 
         setSupportActionBar(toolbar);
 
-        setupNavigationDrawer();
-
+        setupDrawer();
     }
 
-    private void setupNavigationDrawer() {
-        getSupportActionBar().setHomeButtonEnabled(true);
-        toolbar.setNavigationIcon(R.drawable.abc_btn_check_material);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                drawerLayout.openDrawer(GravityCompat.START);
-            }
-        });
+    private void setupDrawer() {
 
-        navigationView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
+        AccountHeader accountHeader = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.snackbar_background)
+                .build();
+
+//        Drawable home = new IconicsDrawable(this).icon(FontAwesome.Icon.faw_home).color(Color.GRAY).sizeDp(24);
+
+        final PrimaryDrawerItem pHome = new PrimaryDrawerItem().withName("Home");
+        final SecondaryDrawerItem sSettings = new SecondaryDrawerItem().withName("Settings");
+        final SecondaryDrawerItem sSupport = new SecondaryDrawerItem().withName("Support");
+        final SecondaryDrawerItem sHelpFeedback = new SecondaryDrawerItem().withName("Help & Feedback");
+
+        sSettings.setCheckable(false);
+        sSupport.setCheckable(false);
+        sHelpFeedback.setCheckable(false);
+
+        Drawer drawer = new DrawerBuilder()
+                .withActivity(this)
+                .withToolbar(toolbar)
+                .withAccountHeader(accountHeader)
+                .addDrawerItems(
+                        pHome,
+                        new DividerDrawerItem(),
+                        sSettings,
+                        sSupport,
+                        sHelpFeedback
+                ).withDelayOnDrawerClose(200)
+                .withCloseOnClick(true)
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
-                        menuItem.setChecked(true);
-                        switch (menuItem.getItemId()) {
-                            case R.id.navigation_item_1:
-                                Snackbar.make(frameLayout, "Item One", Snackbar.LENGTH_SHORT).show();
-//                                mCurrentSelectedPosition = 0;
-                                return true;
-                            case R.id.navigation_item_2:
-                                Snackbar.make(frameLayout, "Item Two", Snackbar.LENGTH_SHORT).show();
-//                                mCurrentSelectedPosition = 1;
-                                return true;
-                            default:
-                                return true;
+                    public boolean onItemClick(AdapterView<?> parent, View view, int position, long id, IDrawerItem drawerItem) {
+                        if (drawerItem.equals(pHome)) {
+                            Snackbar.make(frameLayout, "Home", Snackbar.LENGTH_LONG).show();
+                        } else if (drawerItem.equals(sSettings)) {
+                            startActivity(new Intent(MainActivity.this, Settings.class));
+                        } else if (drawerItem.equals(sHelpFeedback)) {
+                            startActivity(new Intent(MainActivity.this, HelpAndFeedback.class));
+                        } else if (drawerItem.equals(sSupport)) {
+                            startActivity(new Intent(MainActivity.this, Support.class));
+                        } else {
+                            Snackbar.make(frameLayout, "None", Snackbar.LENGTH_LONG).show();
                         }
+                        return false;
                     }
-                }
-        );
+                })
+                .build();
+
+        drawer.setSelection(0);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        drawer.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
     }
 }
